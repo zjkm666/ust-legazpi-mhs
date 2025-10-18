@@ -11,21 +11,19 @@ const API_BASE_URL = 'http://localhost:3000/api';
 const api = {
     async request(endpoint, options = {}) {
         const url = `${API_BASE_URL}${endpoint}`;
-        const token = localStorage.getItem('authToken');
         
         const defaultOptions = {
             headers: {
-                'Content-Type': 'application/json',
-                ...(token && { 'Authorization': `Bearer ${token}` })
-            }
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include' // Include cookies for session-based auth
         };
         
         const response = await fetch(url, { ...defaultOptions, ...options });
         
         if (!response.ok) {
             if (response.status === 401) {
-                // Token expired or invalid
-                localStorage.removeItem('authToken');
+                // Session expired or invalid
                 localStorage.removeItem('currentUser');
                 logout();
                 throw new Error('Session expired. Please login again.');
@@ -279,30 +277,26 @@ async function handleLogin(event) {
         }
         
         // Make API call to login
-        const response = await api.post('/auth/login', {
+        const response = await api.post('/login', {
             email: email,
             password: password
         });
         
         if (response.success) {
-            // Store token and user data
-            localStorage.setItem('authToken', response.data.token);
-            localStorage.setItem('currentUser', JSON.stringify(response.data.user));
+            // Store user data in session (handled by server-side session)
+            localStorage.setItem('currentUser', JSON.stringify(response.user));
             
             // Update current user state
             currentUser = {
-                ...response.data.user,
+                ...response.user,
+                type: 'student',
                 isAuthenticated: true
             };
             
-            // Redirect based on user type
-            if (currentUser.type === 'admin') {
-                showAdminDashboard();
-            } else {
-                showStudentDashboard();
-            }
+            // Redirect to student dashboard
+            showStudentDashboard();
         } else {
-            errorElement.textContent = response.message || 'Login failed.';
+            errorElement.textContent = response.error || 'Login failed.';
         }
         
     } catch (error) {
@@ -318,10 +312,10 @@ async function handleLogin(event) {
 /**
  * Show student dashboard
  */
-function showStudentDashboard() {
+async function showStudentDashboard() {
     document.getElementById('login-page').classList.remove('active');
     document.getElementById('student-dashboard').classList.add('active');
-    updateUserStats();
+    await updateUserStats();
     populateResources();
     populateEducationalContent();
 }
@@ -341,15 +335,14 @@ function showAdminDashboard() {
  */
 async function logout() {
     try {
-        // Call logout API (optional, for server-side session cleanup)
-        await api.post('/auth/logout');
+        // Call logout API to clear server-side session
+        await api.post('/logout');
     } catch (error) {
         // Ignore logout API errors
         console.warn('Logout API call failed:', error);
     }
     
     // Clear local storage
-    localStorage.removeItem('authToken');
     localStorage.removeItem('currentUser');
     
     // Reset current user state
@@ -376,36 +369,33 @@ async function logout() {
  * Check if user is authenticated and restore session
  */
 async function checkAuthentication() {
-    const token = localStorage.getItem('authToken');
-    const storedUser = localStorage.getItem('currentUser');
-    
-    if (token && storedUser) {
-        try {
-            // Verify token with server
-            const response = await api.get('/auth/verify');
-            
-            if (response.success) {
+    try {
+        // Check authentication status with server
+        const response = await api.get('/auth/status');
+        
+        if (response.authenticated) {
+            const storedUser = localStorage.getItem('currentUser');
+            if (storedUser) {
                 currentUser = {
-                    ...response.data.user,
+                    ...JSON.parse(storedUser),
                     isAuthenticated: true
                 };
                 
-                // Redirect based on user type
-                if (currentUser.type === 'admin') {
+                // Redirect based on user role
+                if (response.userRole === 'admin') {
                     showAdminDashboard();
                 } else {
                     showStudentDashboard();
                 }
                 return true;
             }
-        } catch (error) {
-            console.warn('Token verification failed:', error);
-            // Clear invalid tokens
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('currentUser');
         }
+    } catch (error) {
+        console.warn('Authentication check failed:', error);
     }
     
+    // Not authenticated, show login page
+    document.getElementById('login-page').classList.add('active');
     return false;
 }
 
@@ -434,10 +424,28 @@ function showStudentView(viewName) {
 /**
  * Update user statistics display
  */
-function updateUserStats() {
-    document.getElementById('counseling-sessions').textContent = appData.userStats.counselingSessions;
-    document.getElementById('resources-bookmarked').textContent = appData.userStats.resourcesBookmarked;
-    document.getElementById('mood-logs').textContent = appData.userStats.moodLogs;
+async function updateUserStats() {
+    try {
+        // Fetch dashboard data from API
+        const response = await api.get('/user/dashboard');
+        
+        if (response) {
+            document.getElementById('counseling-sessions').textContent = response.counseling_sessions;
+            document.getElementById('resources-bookmarked').textContent = response.resources_bookmarked;
+            document.getElementById('mood-logs').textContent = response.mood_logs;
+            
+            // Update local app data
+            appData.userStats.counselingSessions = response.counseling_sessions;
+            appData.userStats.resourcesBookmarked = response.resources_bookmarked;
+            appData.userStats.moodLogs = response.mood_logs;
+        }
+    } catch (error) {
+        console.error('Error fetching user stats:', error);
+        // Fallback to local data
+        document.getElementById('counseling-sessions').textContent = appData.userStats.counselingSessions;
+        document.getElementById('resources-bookmarked').textContent = appData.userStats.resourcesBookmarked;
+        document.getElementById('mood-logs').textContent = appData.userStats.moodLogs;
+    }
 }
 
 /**
@@ -460,7 +468,7 @@ async function logMood(mood) {
     
     try {
         // Make API call to log mood
-        const response = await api.post('/mood/log', {
+        const response = await api.post('/user/mood', {
             mood: mood
         });
         
@@ -1064,6 +1072,30 @@ function hideLoading(element) {
 function showNotification(message, type = 'info') {
     alert(`${type.toUpperCase()}: ${message}`);
 }
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
+// Initialize the application when DOM is loaded
+document.addEventListener('DOMContentLoaded', async function() {
+    // Set up login form event listener
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+    
+    // Check authentication status
+    await checkAuthentication();
+    
+    // Initialize resources on page load
+    setTimeout(() => {
+        if (document.getElementById('resources-grid')) {
+            populateResources();
+            populateEducationalContent();
+        }
+    }, 100);
+});
 
 // Export functions for testing (if needed)
 if (typeof module !== 'undefined' && module.exports) {
