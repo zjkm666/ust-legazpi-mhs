@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UST-Legazpi Mental Health Support</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="login-page" class="page active">
+        <div class="login-container">
+            <div class="login-header">
+                <img src="UST-Legazpi_Seal.png" alt="UST-Legazpi Logo" class="logo">
+                <h1>UST-Legazpi</h1>
+                <h2>Mental Health Support Portal</h2>
+                <p class="subtitle">A safe space for students to access mental health resources and guidance counseling</p>
+            </div>
+            
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label for="email" class="form-label">University Email</label>
+                    <input type="email" id="email" class="form-control" placeholder="your.name@ust-legazpi.edu.ph" required>
+                    <div id="email-error" class="error-message"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
+                </div>
+                
+                <button type="submit" class="btn btn--primary btn--full-width">Sign In</button>
+            </form>
+            
+            <div class="login-footer">
+                <p class="crisis-notice">
+                    <strong>Crisis Support:</strong> If you're in immediate danger, call <a href="tel:911">911</a> or <a href="tel:1553">1553</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Student Dashboard -->
+    <div id="student-dashboard" class="page">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <img src="UST-Legazpi_Seal.png" alt="Logo" class="logo-nav">
+                <span>UST-Legazpi MHS</span>
+            </div>
+            <div class="nav-menu">
+                <button class="nav-link" onclick="showStudentView('dashboard')">Dashboard</button>
+                <button class="nav-link" onclick="showStudentView('counseling')">Peer Support</button>
+                <button class="nav-link" onclick="showStudentView('resources')">Resources</button>
+                <button class="nav-link" onclick="showStudentView('education')">Learn</button>
+                <button class="btn btn--outline btn--sm crisis-btn" onclick="showCrisisSupport()">Crisis Support</button>
+                <button class="nav-link logout" onclick="logout()">Sign Out</button>
+            </div>
+        </nav>
+        
+        <!-- Student Dashboard Content -->
+        <div id="student-dashboard-content" class="student-view active">
+            <div class="container">
+                <div class="dashboard-header">
+                    <h1>Welcome to Your Mental Health Hub</h1>
+                    <p>Your wellbeing matters. Access support, resources, and connect with peers in a safe environment.</p>
+                </div>
+                
+                <div class="quick-actions">
+                    <div class="action-card" onclick="showStudentView('counseling')">
+                        <div class="action-icon">💬</div>
+                        <h3>Find Peer Counselor</h3>
+                        <p>Connect anonymously with trained peer counselors</p>
+                    </div>
+                    
+                    <div class="action-card" onclick="showStudentView('resources')">
+                        <div class="action-icon">🗺️</div>
+                        <h3>Browse Resources</h3>
+                        <p>Discover mental health services in Legazpi City</p>
+                    </div>
+                    
+                    <div class="action-card" onclick="showStudentView('education')">
+                        <div class="action-icon">📚</div>
+                        <h3>Educational Materials</h3>
+                        <p>Learn about mental health and coping strategies</p>
+                    </div>
+                </div>
+                
+                <div class="wellness-section">
+                    <div class="mood-tracker">
+                        <h3>Daily Mood Check-in</h3>
+                        <p>How are you feeling today?</p>
+                        <div class="mood-options">
+                            <button class="mood-btn" onclick="logMood('excellent')" data-mood="excellent">😊</button>
+                            <button class="mood-btn" onclick="logMood('good')" data-mood="good">🙂</button>
+                            <button class="mood-btn" onclick="logMood('okay')" data-mood="okay">😐</button>
+                            <button class="mood-btn" onclick="logMood('difficult')" data-mood="difficult">😟</button>
+                            <button class="mood-btn" onclick="logMood('struggling')" data-mood="struggling">😢</button>
+                        </div>
+                        <div id="mood-feedback" class="mood-feedback"></div>
+                    </div>
+                    
+                    <div class="wellness-stats">
+                        <h3>Your Wellness Journey</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-number" id="counseling-sessions">0</span>
+                                <span class="stat-label">Counseling Sessions</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="resources-bookmarked">0</span>
+                                <span class="stat-label">Resources Saved</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="mood-logs">0</span>
+                                <span class="stat-label">Mood Check-ins</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Peer Counseling Section -->
+        <div id="student-counseling-content" class="student-view">
+            <div class="container">
+                <h1 style="margin-bottom: 10px;">Anonymous Peer Counseling</h1>
+                
+                <div id="counseling-start" class="counseling-section active">
+                    <div class="intro-card">
+                        <h2>Connect with a Peer Counselor</h2>
+                        <p>Our trained student counselors are here to listen and provide support in a safe, anonymous environment.</p>
+                        
+                        <div class="safety-notice">
+                            <strong>Important:</strong> Peer counselors are trained students, not professionals. For crisis situations, please use our <button class="btn btn--outline btn--sm" onclick="showCrisisSupport()">Crisis Support</button> resources.
+                        </div>
+                    </div>
+                    
+                    <form id="matching-form" class="matching-form">
+                        <h3>Help us match you with the right counselor</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">What type of support are you looking for?</label>
+                            <div class="category-options">
+                                <div class="category-option">
+                                    <input type="radio" id="academic" name="category" value="Academic Stress">
+                                    <label for="academic">Academic Stress</label>
+                                </div>
+                                <div class="category-option">
+                                    <input type="radio" id="social" name="category" value="Social Anxiety">
+                                    <label for="social">Social Anxiety</label>
+                                </div>
+                                <div class="category-option">
+                                    <input type="radio" id="mood" name="category" value="Depression & Mood">
+                                    <label for="mood">Depression &amp; Mood</label>
+                                </div>
+                                <div class="category-option">
+                                    <input type="radio" id="relationships" name="category" value="Relationship Issues">
+                                    <label for="relationships">Relationship Issues</label>
+                                </div>
+                                <div class="category-option">
+                                    <input type="radio" id="identity" name="category" value="Identity & Self-Esteem">
+                                    <label for="identity">Identity &amp; Self-Esteem</label>
+                                </div>
+                                <div class="category-option">
+                                    <input type="radio" id="transitions" name="category" value="Life Transitions">
+                                    <label for="transitions">Life Transitions</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="urgency" class="form-label">How urgent is your need for support?</label>
+                            <select id="urgency" class="form-control">
+                                <option value="low">I can wait - just need someone to talk to</option>
+                                <option value="medium">Moderate - would like to chat soon</option>
+                                <option value="high">High - need support as soon as possible</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn--primary">Find a Counselor</button>
+                    </form>
+                </div>
+                
+                <div id="counseling-matched" class="counseling-section">
+                    <div class="match-success">
+                        <h2>✓ Matched with a Peer Counselor</h2>
+                        <p>You've been connected with a trained peer counselor who specializes in your area of concern.</p>
+                        <button class="btn btn--primary" onclick="startChat()">Start Anonymous Chat</button>
+                        <button class="btn btn--outline" onclick="resetCounselorMatching()">Find Different Counselor</button>
+                    </div>
+                </div>
+                
+                <div id="counseling-chat" class="counseling-section">
+                    <div class="chat-container">
+                        <div class="chat-header">
+                            <h3>Anonymous Chat Session</h3>
+                            <button class="btn btn--outline btn--sm" onclick="endChat()">End Session</button>
+                        </div>
+                        
+                        <div id="chat-messages" class="chat-messages">
+                            <div class="message counselor-message">
+                                <strong>Peer Counselor:</strong> Hello! I'm here to listen and support you. What would you like to talk about today?
+                            </div>
+                        </div>
+                        
+                        <div class="chat-input-container">
+                            <input type="text" id="chat-input" class="chat-input" placeholder="Type your message..." maxlength="500">
+                            <button onclick="sendMessage()" class="btn btn--primary">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Resources Section -->
+        <div id="student-resources-content" class="student-view">
+            <div class="container">
+                <h1 style="margin-bottom: 10px;">Mental Health Resources in Legazpi City</h1>
+                
+                <div class="resources-filters">
+                    <select id="resource-filter" class="form-control" onchange="filterResources()">
+                        <option value="all">All Resources</option>
+                        <option value="University Counseling">University Services</option>
+                        <option value="Private Practice">Private Practice</option>
+                        <option value="Mental Health Clinic">Mental Health Clinics</option>
+                        <option value="Hospital Service">Hospital Services</option>
+                    </select>
+                </div>
+                
+                <div id="resources-grid" class="resources-grid">
+                    <!-- Resources will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Learn Section -->
+        <div id="student-education-content" class="student-view">
+            <div class="container">
+                <h1 style="margin-bottom: 10px;">Mental Health Education</h1>
+                
+                <div class="education-grid">
+                    <!-- Education content will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Admin Dashboard -->
+    <div id="admin-dashboard" class="page">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <img src="UST-Legazpi_Seal.png" alt="UST-Legazpi Logo" class="logo-nav">
+                <span>UST-Legazpi MHS Admin</span>
+            </div>
+            <div class="nav-menu">
+                <button class="nav-link" onclick="showAdminView('overview')">Overview</button>
+                <button class="nav-link" onclick="showAdminView('users')">Users</button>
+                <button class="nav-link" onclick="showAdminView('counselors')">Counselors</button>
+                <button class="nav-link" onclick="showAdminView('resources')">Resources</button>
+                <button class="nav-link" onclick="showAdminView('content')">Content</button>
+                <button class="nav-link logout" onclick="logout()">Sign Out</button>
+            </div>
+        </nav>
+        
+        <!-- Admin Overview -->
+        <div id="admin-overview-content" class="admin-view active">
+            <div class="container">
+                <div class="admin-header">
+                    <h1>Platform Overview</h1>
+                    <p>Monitor and manage the UST-Legazpi Mental Health Support platform</p>
+                </div>
+                
+                <div class="admin-stats">
+                    <div class="stat-card">
+                        <h3 id="total-users">127</h3>
+                        <p>Registered Students</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="active-sessions">8</h3>
+                        <p>Active Counseling Sessions</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="total-resources">15</h3>
+                        <p>Mental Health Resources</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="peer-counselors">23</h3>
+                        <p>Active Peer Counselors</p>
+                    </div>
+                </div>
+                
+                <div class="admin-recent">
+                    <div class="recent-activity">
+                        <h3 style="margin-bottom: 10px;">Recent Activity</h3>
+                        <div class="activity-list">
+                            <div class="activity-item">
+                                <span class="activity-time">2 minutes ago</span>
+                                <span class="activity-desc">New counseling session started</span>
+                            </div>
+                            <div class="activity-item">
+                                <span class="activity-time">15 minutes ago</span>
+                                <span class="activity-desc">Student registered: j.santos@ust-legazpi.edu.ph</span>
+                            </div>
+                            <div class="activity-item">
+                                <span class="activity-time">1 hour ago</span>
+                                <span class="activity-desc">Resource review submitted</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alerts-panel">
+                        <h3 style="margin-bottom: 10px;">System Alerts</h3>
+                        <div class="alert alert-warning">
+                            <strong>High Usage:</strong> Peer counseling demand increased by 40% this week
+                        </div>
+                        <div class="alert alert-info">
+                            <strong>Update:</strong> New mental health resource added to database
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin Users Management -->
+        <div id="admin-users-content" class="admin-view">
+            <div class="container">
+                <h1 style="margin-bottom: 10px;">User Management</h1>
+                
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Email</th>
+                                <th>Registration Date</th>
+                                <th>Last Active</th>
+                                <th>Sessions</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2021-001</td>
+                                <td>m.garcia@ust-legazpi.edu.ph</td>
+                                <td>Sept 15, 2024</td>
+                                <td>Oct 16, 2024</td>
+                                <td>3</td>
+                                <td><span class="status status--success">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td>2021-002</td>
+                                <td>j.santos@ust-legazpi.edu.ph</td>
+                                <td>Sept 18, 2024</td>
+                                <td>Oct 17, 2024</td>
+                                <td>1</td>
+                                <td><span class="status status--success">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td>2020-045</td>
+                                <td>a.reyes@ust-legazpi.edu.ph</td>
+                                <td>Aug 22, 2024</td>
+                                <td>Oct 10, 2024</td>
+                                <td>7</td>
+                                <td><span class="status status--warning">Inactive</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin Counselors Management -->
+        <div id="admin-counselors-content" class="admin-view">
+            <div class="container">
+                <h1 style="margin-bottom: 10px;">Peer Counselor Management</h1>
+                
+                <div class="counselor-actions">
+                    <button class="btn btn--primary">Add New Counselor</button>
+                    <button class="btn btn--outline">Training Materials</button>
+                </div>
+                
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Counselor ID</th>
+                                <th>Specialties</th>
+                                <th>Sessions This Month</th>
+                                <th>Rating</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>PC-001</td>
+                                <td>Academic Stress, Anxiety</td>
+                                <td>12</td>
+                                <td>4.8/5</td>
+                                <td><span class="status status--success">Available</span></td>
+                                <td><button class="btn btn--sm btn--outline">View Details</button></td>
+                            </tr>
+                            <tr>
+                                <td>PC-002</td>
+                                <td>Depression, Relationships</td>
+                                <td>8</td>
+                                <td>4.6/5</td>
+                                <td><span class="status status--warning">Busy</span></td>
+                                <td><button class="btn btn--sm btn--outline">View Details</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin Resources Management -->
+        <div id="admin-resources-content" class="admin-view">
+            <div class="container">
+                <h1 style="margin-bottom: 10px;">Resource Management</h1>
+                
+                <div class="resource-actions">
+                    <button class="btn btn--primary" onclick="showAddResourceForm()">Add New Resource</button>
+                    <button class="btn btn--outline">Import Resources</button>
+                </div>
+                
+                <div id="admin-resources-list" class="admin-resources-list">
+                    <!-- Resources will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin Content Management -->
+        <div id="admin-content-content" class="admin-view">
+            <div class="container">
+                <h1 style="margin-bottom: 10px;">Content Management</h1>
+                
+                <div class="content-sections">
+                    <div class="content-section">
+                        <h3>Educational Materials</h3>
+                        <p>Manage articles, guides, and educational content for students</p>
+                        <button class="btn btn--outline">Manage Content</button>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>Crisis Information</h3>
+                        <p>Update emergency contacts and crisis intervention resources</p>
+                        <button class="btn btn--outline">Update Crisis Info</button>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>Platform Announcements</h3>
+                        <p>Create and manage announcements for users</p>
+                        <button class="btn btn--outline">Manage Announcements</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Crisis Support Modal -->
+    <div id="crisis-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🆘 Crisis Support Resources</h2>
+                <button class="modal-close" onclick="closeCrisisModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="crisis-notice">
+                    <p><strong>If you're in immediate danger, don't wait - call emergency services now.</strong></p>
+                </div>
+                
+                <div class="crisis-contacts">
+                    <div class="crisis-contact">
+                        <h3>National Crisis Hotline</h3>
+                        <a href="tel:1553" class="btn btn--primary crisis-call-btn">Call 1553</a>
+                        <p>24/7 crisis intervention and suicide prevention</p>
+                    </div>
+                    
+                    <div class="crisis-contact">
+                        <h3>Emergency Services</h3>
+                        <a href="tel:911" class="btn btn--primary crisis-call-btn">Call 911</a>
+                        <p>Local emergency services</p>
+                    </div>
+                    
+                    <div class="crisis-contact">
+                        <h3>UST-Legazpi Security</h3>
+                        <a href="tel:(052) 482-0203" class="btn btn--outline crisis-call-btn">Call (052) 482-0203</a>
+                        <p>Campus emergency response</p>
+                    </div>
+                    
+                    <div class="crisis-contact">
+                        <h3>UST-Legazpi Guidance Office</h3>
+                        <a href="tel:(052) 482-0203" class="btn btn--outline crisis-call-btn">Call (052) 482-0203 ext 312</a>
+                        <p>Professional counseling support</p>
+                    </div>
+                </div>
+                
+                <div class="crisis-resources">
+                    <h3>Immediate Self-Help Resources</h3>
+                    <ul>
+                        <li>Take slow, deep breaths</li>
+                        <li>Call a trusted friend or family member</li>
+                        <li>Go to a safe, public place</li>
+                        <li>Remove any means of self-harm</li>
+                        <li>Stay with someone you trust</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
