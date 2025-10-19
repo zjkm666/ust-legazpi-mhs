@@ -20,7 +20,7 @@ app.use(express.static(path.join(__dirname)));
 
 // Session configuration
 app.use(session({
-    secret: 'ust-legazpi-mhs-secret-key-2024',
+    secret: '20d9702f-36b6-4e0d-bae1-334d2f3d742a',
     resave: false,
     saveUninitialized: false,
     cookie: { 
