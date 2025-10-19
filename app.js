@@ -484,8 +484,8 @@ function validateSignUpForm(data) {
     // Student ID validation
     if (!data.studentId.trim()) {
         errors.push({ field: 'student-id', message: 'Student ID is required.' });
-    } else if (!/^\d{4}-\d{3}$/.test(data.studentId.trim())) {
-        errors.push({ field: 'student-id', message: 'Student ID must be in format YYYY-XXX (e.g., 2021-001).' });
+    } else if (!/^\d{7}$/.test(data.studentId.trim())) {
+        errors.push({ field: 'student-id', message: 'Student ID must be 7 digits (e.g., 0000000).' });
     }
     
     // Name validation

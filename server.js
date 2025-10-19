@@ -1,5 +1,5 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
 const session = require('express-session');
@@ -8,6 +8,9 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// MongoDB connection string - update this with your MongoDB connection
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ust-legazpi-mhs';
 
 // Middleware
 app.use(cors());
@@ -26,84 +29,226 @@ app.use(session({
     }
 }));
 
-// Database connection
-const db = new sqlite3.Database('./database.sqlite', (err) => {
-    if (err) {
-        console.error('Error opening database:', err.message);
-    } else {
-        console.log('Connected to SQLite database');
+// MongoDB connection
+mongoose.connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
+.then(() => {
+    console.log('Connected to MongoDB');
+})
+.catch((error) => {
+    console.error('MongoDB connection error:', error);
+    process.exit(1);
+});
+
+// User Schema
+const userSchema = new mongoose.Schema({
+    student_id: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true
+    },
+    password: {
+        type: String,
+        required: true
+    },
+    first_name: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    last_name: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    year_level: {
+        type: String,
+        required: true
+    },
+    course: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    created_at: {
+        type: Date,
+        default: Date.now
+    },
+    last_login: {
+        type: Date,
+        default: null
+    },
+    is_active: {
+        type: Boolean,
+        default: true
     }
 });
 
-// Initialize database tables
-db.serialize(() => {
-    // Users table
-    db.run(`CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        student_id TEXT UNIQUE NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        first_name TEXT NOT NULL,
-        last_name TEXT NOT NULL,
-        year_level TEXT,
-        course TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        last_login DATETIME,
-        is_active BOOLEAN DEFAULT 1
-    )`);
-
-    // Peer counselors table
-    db.run(`CREATE TABLE IF NOT EXISTS peer_counselors (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        counselor_id TEXT UNIQUE NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        first_name TEXT NOT NULL,
-        last_name TEXT NOT NULL,
-        specialties TEXT,
-        rating REAL DEFAULT 0,
-        sessions_count INTEGER DEFAULT 0,
-        is_available BOOLEAN DEFAULT 1,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-
-    // Counseling sessions table
-    db.run(`CREATE TABLE IF NOT EXISTS counseling_sessions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        student_id INTEGER,
-        counselor_id INTEGER,
-        category TEXT,
-        urgency TEXT,
-        status TEXT DEFAULT 'active',
-        started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        ended_at DATETIME,
-        FOREIGN KEY (student_id) REFERENCES users (id),
-        FOREIGN KEY (counselor_id) REFERENCES peer_counselors (id)
-    )`);
-
-    // Mood logs table
-    db.run(`CREATE TABLE IF NOT EXISTS mood_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        mood TEXT NOT NULL,
-        notes TEXT,
-        logged_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id)
-    )`);
-
-    // Resources table
-    db.run(`CREATE TABLE IF NOT EXISTS resources (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        type TEXT NOT NULL,
-        description TEXT,
-        contact_info TEXT,
-        location TEXT,
-        website TEXT,
-        is_active BOOLEAN DEFAULT 1,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
+// Peer Counselor Schema
+const peerCounselorSchema = new mongoose.Schema({
+    counselor_id: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true
+    },
+    password: {
+        type: String,
+        required: true
+    },
+    first_name: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    last_name: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    specialties: {
+        type: [String],
+        default: []
+    },
+    rating: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5
+    },
+    sessions_count: {
+        type: Number,
+        default: 0
+    },
+    is_available: {
+        type: Boolean,
+        default: true
+    },
+    created_at: {
+        type: Date,
+        default: Date.now
+    }
 });
+
+// Counseling Session Schema
+const counselingSessionSchema = new mongoose.Schema({
+    student_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    counselor_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'PeerCounselor',
+        required: true
+    },
+    category: {
+        type: String,
+        required: true
+    },
+    urgency: {
+        type: String,
+        enum: ['low', 'medium', 'high'],
+        default: 'low'
+    },
+    status: {
+        type: String,
+        enum: ['active', 'completed', 'cancelled'],
+        default: 'active'
+    },
+    started_at: {
+        type: Date,
+        default: Date.now
+    },
+    ended_at: {
+        type: Date,
+        default: null
+    }
+});
+
+// Mood Log Schema
+const moodLogSchema = new mongoose.Schema({
+    user_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    mood: {
+        type: String,
+        required: true,
+        enum: ['excellent', 'good', 'okay', 'difficult', 'struggling']
+    },
+    notes: {
+        type: String,
+        default: null
+    },
+    logged_at: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+// Resource Schema
+const resourceSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    type: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    description: {
+        type: String,
+        default: null
+    },
+    contact_info: {
+        type: String,
+        default: null
+    },
+    location: {
+        type: String,
+        default: null
+    },
+    website: {
+        type: String,
+        default: null
+    },
+    is_active: {
+        type: Boolean,
+        default: true
+    },
+    created_at: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+// Create models
+const User = mongoose.model('User', userSchema);
+const PeerCounselor = mongoose.model('PeerCounselor', peerCounselorSchema);
+const CounselingSession = mongoose.model('CounselingSession', counselingSessionSchema);
+const MoodLog = mongoose.model('MoodLog', moodLogSchema);
+const Resource = mongoose.model('Resource', resourceSchema);
 
 // Authentication middleware
 const requireAuth = (req, res, next) => {
@@ -124,50 +269,38 @@ app.post('/api/login', async (req, res) => {
 
     try {
         // Check if user exists
-        db.get(
-            'SELECT * FROM users WHERE email = ? AND is_active = 1',
-            [email],
-            async (err, user) => {
-                if (err) {
-                    console.error('Database error:', err);
-                    return res.status(500).json({ error: 'Internal server error' });
-                }
+        const user = await User.findOne({ email: email.toLowerCase(), is_active: true });
+        
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
 
-                if (!user) {
-                    return res.status(401).json({ error: 'Invalid email or password' });
-                }
+        // Verify password
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
 
-                // Verify password
-                const isValidPassword = await bcrypt.compare(password, user.password);
-                if (!isValidPassword) {
-                    return res.status(401).json({ error: 'Invalid email or password' });
-                }
+        // Update last login
+        await User.findByIdAndUpdate(user._id, { last_login: new Date() });
 
-                // Update last login
-                db.run(
-                    'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
-                    [user.id]
-                );
+        // Create session
+        req.session.userId = user._id;
+        req.session.userEmail = user.email;
+        req.session.userRole = 'student';
 
-                // Create session
-                req.session.userId = user.id;
-                req.session.userEmail = user.email;
-                req.session.userRole = 'student';
-
-                res.json({
-                    success: true,
-                    user: {
-                        id: user.id,
-                        student_id: user.student_id,
-                        email: user.email,
-                        first_name: user.first_name,
-                        last_name: user.last_name,
-                        year_level: user.year_level,
-                        course: user.course
-                    }
-                });
+        res.json({
+            success: true,
+            user: {
+                id: user._id,
+                student_id: user.student_id,
+                email: user.email,
+                first_name: user.first_name,
+                last_name: user.last_name,
+                year_level: user.year_level,
+                course: user.course
             }
-        );
+        });
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -190,51 +323,52 @@ app.post('/api/register', async (req, res) => {
 
     try {
         // Check if user already exists
-        db.get(
-            'SELECT id FROM users WHERE email = ? OR student_id = ?',
-            [email, student_id],
-            async (err, existingUser) => {
-                if (err) {
-                    console.error('Database error:', err);
-                    return res.status(500).json({ error: 'Internal server error' });
-                }
+        const existingUser = await User.findOne({
+            $or: [
+                { email: email.toLowerCase() },
+                { student_id: student_id }
+            ]
+        });
 
-                if (existingUser) {
-                    return res.status(409).json({ error: 'User with this email or student ID already exists' });
-                }
+        if (existingUser) {
+            return res.status(409).json({ error: 'User with this email or student ID already exists' });
+        }
 
-                // Hash password
-                const hashedPassword = await bcrypt.hash(password, 10);
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-                // Insert new user
-                db.run(
-                    'INSERT INTO users (student_id, email, password, first_name, last_name, year_level, course) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                    [student_id, email, hashedPassword, first_name, last_name, year_level, course],
-                    function(err) {
-                        if (err) {
-                            console.error('Error creating user:', err);
-                            return res.status(500).json({ error: 'Failed to create account' });
-                        }
+        // Create new user
+        const newUser = new User({
+            student_id: student_id,
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            first_name: first_name,
+            last_name: last_name,
+            year_level: year_level,
+            course: course
+        });
 
-                        res.json({
-                            success: true,
-                            message: 'Account created successfully',
-                            user: {
-                                id: this.lastID,
-                                student_id: student_id,
-                                email: email,
-                                first_name: first_name,
-                                last_name: last_name,
-                                year_level: year_level,
-                                course: course
-                            }
-                        });
-                    }
-                );
+        const savedUser = await newUser.save();
+
+        res.json({
+            success: true,
+            message: 'Account created successfully',
+            user: {
+                id: savedUser._id,
+                student_id: savedUser.student_id,
+                email: savedUser.email,
+                first_name: savedUser.first_name,
+                last_name: savedUser.last_name,
+                year_level: savedUser.year_level,
+                course: savedUser.course
             }
-        );
+        });
     } catch (error) {
         console.error('Registration error:', error);
+        if (error.code === 11000) {
+            // Duplicate key error
+            return res.status(409).json({ error: 'User with this email or student ID already exists' });
+        }
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -249,43 +383,34 @@ app.post('/api/admin/login', async (req, res) => {
 
     try {
         // Check if admin exists (using peer_counselors table for now)
-        db.get(
-            'SELECT * FROM peer_counselors WHERE email = ? AND is_available = 1',
-            [email],
-            async (err, admin) => {
-                if (err) {
-                    console.error('Database error:', err);
-                    return res.status(500).json({ error: 'Internal server error' });
-                }
+        const admin = await PeerCounselor.findOne({ email: email.toLowerCase(), is_available: true });
+        
+        if (!admin) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
 
-                if (!admin) {
-                    return res.status(401).json({ error: 'Invalid email or password' });
-                }
+        // Verify password
+        const isValidPassword = await bcrypt.compare(password, admin.password);
+        if (!isValidPassword) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
 
-                // Verify password
-                const isValidPassword = await bcrypt.compare(password, admin.password);
-                if (!isValidPassword) {
-                    return res.status(401).json({ error: 'Invalid email or password' });
-                }
+        // Create session
+        req.session.userId = admin._id;
+        req.session.userEmail = admin.email;
+        req.session.userRole = 'admin';
 
-                // Create session
-                req.session.userId = admin.id;
-                req.session.userEmail = admin.email;
-                req.session.userRole = 'admin';
-
-                res.json({
-                    success: true,
-                    user: {
-                        id: admin.id,
-                        counselor_id: admin.counselor_id,
-                        email: admin.email,
-                        first_name: admin.first_name,
-                        last_name: admin.last_name,
-                        specialties: admin.specialties
-                    }
-                });
+        res.json({
+            success: true,
+            user: {
+                id: admin._id,
+                counselor_id: admin.counselor_id,
+                email: admin.email,
+                first_name: admin.first_name,
+                last_name: admin.last_name,
+                specialties: admin.specialties
             }
-        );
+        });
     } catch (error) {
         console.error('Admin login error:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -317,42 +442,29 @@ app.get('/api/auth/status', (req, res) => {
 });
 
 // Get user dashboard data
-app.get('/api/user/dashboard', requireAuth, (req, res) => {
-    const userId = req.session.userId;
+app.get('/api/user/dashboard', requireAuth, async (req, res) => {
+    try {
+        const userId = req.session.userId;
 
-    // Get counseling sessions count
-    db.get(
-        'SELECT COUNT(*) as count FROM counseling_sessions WHERE student_id = ?',
-        [userId],
-        (err, sessionsResult) => {
-            if (err) {
-                console.error('Error getting sessions count:', err);
-                return res.status(500).json({ error: 'Database error' });
-            }
+        // Get counseling sessions count
+        const sessionsCount = await CounselingSession.countDocuments({ student_id: userId });
+        
+        // Get mood logs count
+        const moodLogsCount = await MoodLog.countDocuments({ user_id: userId });
 
-            // Get mood logs count
-            db.get(
-                'SELECT COUNT(*) as count FROM mood_logs WHERE user_id = ?',
-                [userId],
-                (err, moodResult) => {
-                    if (err) {
-                        console.error('Error getting mood logs count:', err);
-                        return res.status(500).json({ error: 'Database error' });
-                    }
-
-                    res.json({
-                        counseling_sessions: sessionsResult.count,
-                        mood_logs: moodResult.count,
-                        resources_bookmarked: 0 // Placeholder
-                    });
-                }
-            );
-        }
-    );
+        res.json({
+            counseling_sessions: sessionsCount,
+            mood_logs: moodLogsCount,
+            resources_bookmarked: 0 // Placeholder
+        });
+    } catch (error) {
+        console.error('Error getting dashboard data:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
 });
 
 // Log mood endpoint
-app.post('/api/user/mood', requireAuth, (req, res) => {
+app.post('/api/user/mood', requireAuth, async (req, res) => {
     const { mood, notes } = req.body;
     const userId = req.session.userId;
 
@@ -360,34 +472,30 @@ app.post('/api/user/mood', requireAuth, (req, res) => {
         return res.status(400).json({ error: 'Mood is required' });
     }
 
-    db.run(
-        'INSERT INTO mood_logs (user_id, mood, notes) VALUES (?, ?, ?)',
-        [userId, mood, notes || null],
-        function(err) {
-            if (err) {
-                console.error('Error logging mood:', err);
-                return res.status(500).json({ error: 'Database error' });
-            }
+    try {
+        const moodLog = new MoodLog({
+            user_id: userId,
+            mood: mood,
+            notes: notes || null
+        });
 
-            res.json({ success: true, id: this.lastID });
-        }
-    );
+        const savedMoodLog = await moodLog.save();
+        res.json({ success: true, id: savedMoodLog._id });
+    } catch (error) {
+        console.error('Error logging mood:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
 });
 
 // Get resources
-app.get('/api/resources', (req, res) => {
-    db.all(
-        'SELECT * FROM resources WHERE is_active = 1 ORDER BY name',
-        [],
-        (err, rows) => {
-            if (err) {
-                console.error('Error getting resources:', err);
-                return res.status(500).json({ error: 'Database error' });
-            }
-
-            res.json(rows);
-        }
-    );
+app.get('/api/resources', async (req, res) => {
+    try {
+        const resources = await Resource.find({ is_active: true }).sort({ name: 1 });
+        res.json(resources);
+    } catch (error) {
+        console.error('Error getting resources:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
 });
 
 // Serve the main HTML file
@@ -402,11 +510,8 @@ app.listen(PORT, () => {
 
 // Graceful shutdown
 process.on('SIGINT', () => {
-    db.close((err) => {
-        if (err) {
-            console.error(err.message);
-        }
-        console.log('Database connection closed.');
+    mongoose.connection.close(() => {
+        console.log('MongoDB connection closed.');
         process.exit(0);
     });
 });
