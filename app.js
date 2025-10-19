@@ -515,8 +515,6 @@ function validateSignUpForm(data) {
         errors.push({ field: 'signup-password', message: 'Password is required.' });
     } else if (data.password.length < 8) {
         errors.push({ field: 'signup-password', message: 'Password must be at least 8 characters long.' });
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(data.password)) {
-        errors.push({ field: 'signup-password', message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number.' });
     }
     
     // Confirm password validation
@@ -1281,30 +1279,6 @@ function hideLoading(element) {
 function showNotification(message, type = 'info') {
     alert(`${type.toUpperCase()}: ${message}`);
 }
-
-// ============================================================================
-// INITIALIZATION
-// ============================================================================
-
-// Initialize the application when DOM is loaded
-document.addEventListener('DOMContentLoaded', async function() {
-    // Set up login form event listener
-    const loginForm = document.getElementById('login-form');
-    if (loginForm) {
-        loginForm.addEventListener('submit', handleLogin);
-    }
-    
-    // Check authentication status
-    await checkAuthentication();
-    
-    // Initialize resources on page load
-    setTimeout(() => {
-        if (document.getElementById('resources-grid')) {
-            populateResources();
-            populateEducationalContent();
-        }
-    }, 100);
-});
 
 // Export functions for testing (if needed)
 if (typeof module !== 'undefined' && module.exports) {

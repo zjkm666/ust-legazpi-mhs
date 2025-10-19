@@ -49,11 +49,13 @@
                 <div class="form-group">
                     <label for="signup-first-name" class="form-label">First Name</label>
                     <input type="text" id="signup-first-name" class="form-control" placeholder="Juan" required>
+                    <div id="first-name-error" class="error-message"></div>
                 </div>
                 
                 <div class="form-group">
                     <label for="signup-last-name" class="form-label">Last Name</label>
                     <input type="text" id="signup-last-name" class="form-control" placeholder="Santos" required>
+                    <div id="last-name-error" class="error-message"></div>
                 </div>
                 
                 <div class="form-group">
@@ -65,6 +67,7 @@
                 <div class="form-group">
                     <label for="signup-password" class="form-label">Password</label>
                     <input type="password" id="signup-password" class="form-control" placeholder="Create a secure password" required minlength="8">
+                    <div id="signup-password-error" class="error-message"></div>
                     <div class="password-requirements">
                         <small>Password must be at least 8 characters long</small>
                     </div>
@@ -73,7 +76,7 @@
                 <div class="form-group">
                     <label for="signup-confirm-password" class="form-label">Confirm Password</label>
                     <input type="password" id="signup-confirm-password" class="form-control" placeholder="Confirm your password" required>
-                    <div id="password-match-error" class="error-message"></div>
+                    <div id="confirm-password-error" class="error-message"></div>
                 </div>
                 
                 <div class="form-group">
@@ -86,11 +89,13 @@
                         <option value="4th Year">4th Year</option>
                         <option value="5th Year">5th Year</option>
                     </select>
+                    <div id="year-level-error" class="error-message"></div>
                 </div>
                 
                 <div class="form-group">
                     <label for="signup-course" class="form-label">Course/Program</label>
                     <input type="text" id="signup-course" class="form-control" placeholder="e.g., Computer Science, Psychology" required>
+                    <div id="course-error" class="error-message"></div>
                 </div>
                 
                 <div class="form-group">
@@ -98,6 +103,7 @@
                         <input type="checkbox" id="signup-agreement" required>
                         <label for="signup-agreement">I agree to the <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a></label>
                     </div>
+                    <div id="agreement-error" class="error-message"></div>
                 </div>
                 
                 <button type="submit" class="btn btn--primary btn--full-width">Create Account</button>
