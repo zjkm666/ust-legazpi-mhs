@@ -30,6 +30,81 @@
                 </div>
                 
                 <button type="submit" class="btn btn--primary btn--full-width">Sign In</button>
+                
+                <div class="form-footer">
+                    <p>Don't have an account? <a href="#" onclick="showSignUpForm()" class="link">Sign up here</a></p>
+                </div>
+            </form>
+            
+            <!-- Sign Up Form -->
+            <form id="signup-form" class="login-form" style="display: none;">
+                <h3 style="text-align: center; margin-bottom: 20px; color: #2c3e50;">Create Your Account</h3>
+                
+                <div class="form-group">
+                    <label for="signup-student-id" class="form-label">Student ID</label>
+                    <input type="text" id="signup-student-id" class="form-control" placeholder="2021-001" required>
+                    <div id="student-id-error" class="error-message"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="signup-first-name" class="form-label">First Name</label>
+                    <input type="text" id="signup-first-name" class="form-control" placeholder="Juan" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="signup-last-name" class="form-label">Last Name</label>
+                    <input type="text" id="signup-last-name" class="form-control" placeholder="Santos" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="signup-email" class="form-label">University Email</label>
+                    <input type="email" id="signup-email" class="form-control" placeholder="juan.santos@ust-legazpi.edu.ph" required>
+                    <div id="signup-email-error" class="error-message"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="signup-password" class="form-label">Password</label>
+                    <input type="password" id="signup-password" class="form-control" placeholder="Create a secure password" required minlength="8">
+                    <div class="password-requirements">
+                        <small>Password must be at least 8 characters long</small>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="signup-confirm-password" class="form-label">Confirm Password</label>
+                    <input type="password" id="signup-confirm-password" class="form-control" placeholder="Confirm your password" required>
+                    <div id="password-match-error" class="error-message"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="signup-year-level" class="form-label">Year Level</label>
+                    <select id="signup-year-level" class="form-control" required>
+                        <option value="">Select year level</option>
+                        <option value="1st Year">1st Year</option>
+                        <option value="2nd Year">2nd Year</option>
+                        <option value="3rd Year">3rd Year</option>
+                        <option value="4th Year">4th Year</option>
+                        <option value="5th Year">5th Year</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="signup-course" class="form-label">Course/Program</label>
+                    <input type="text" id="signup-course" class="form-control" placeholder="e.g., Computer Science, Psychology" required>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="signup-agreement" required>
+                        <label for="signup-agreement">I agree to the <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a></label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn--primary btn--full-width">Create Account</button>
+                
+                <div class="form-footer">
+                    <p>Already have an account? <a href="#" onclick="showLoginForm()" class="link">Sign in here</a></p>
+                </div>
             </form>
             
             <div class="login-footer">

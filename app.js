@@ -399,6 +399,209 @@ async function checkAuthentication() {
     return false;
 }
 
+/**
+ * Handle sign-up form submission
+ */
+async function handleSignUp(event) {
+    event.preventDefault();
+    
+    // Get form elements
+    const form = event.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    
+    // Get form data
+    const studentId = document.getElementById('signup-student-id').value;
+    const firstName = document.getElementById('signup-first-name').value;
+    const lastName = document.getElementById('signup-last-name').value;
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+    const confirmPassword = document.getElementById('signup-confirm-password').value;
+    const yearLevel = document.getElementById('signup-year-level').value;
+    const course = document.getElementById('signup-course').value;
+    const agreement = document.getElementById('signup-agreement').checked;
+    
+    // Clear previous errors
+    clearSignUpErrors();
+    
+    // Show loading state
+    submitButton.textContent = 'Creating Account...';
+    submitButton.disabled = true;
+    
+    try {
+        // Validate form data
+        const validationErrors = validateSignUpForm({
+            studentId, firstName, lastName, email, password, confirmPassword, yearLevel, course, agreement
+        });
+        
+        if (validationErrors.length > 0) {
+            displaySignUpErrors(validationErrors);
+            return;
+        }
+        
+        // Make API call to register user
+        const response = await api.post('/register', {
+            student_id: studentId,
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            password: password,
+            year_level: yearLevel,
+            course: course
+        });
+        
+        if (response.success) {
+            // Show success message
+            showSignUpSuccess();
+            
+            // Switch to login form after a delay
+            setTimeout(() => {
+                showLoginForm();
+                // Pre-fill email field
+                document.getElementById('email').value = email;
+            }, 2000);
+            
+        } else {
+            displaySignUpErrors([response.error || 'Registration failed. Please try again.']);
+        }
+        
+    } catch (error) {
+        console.error('Sign-up error:', error);
+        displaySignUpErrors([error.message || 'Registration failed. Please try again.']);
+    } finally {
+        // Reset button state
+        submitButton.textContent = originalText;
+        submitButton.disabled = false;
+    }
+}
+
+/**
+ * Validate sign-up form data
+ */
+function validateSignUpForm(data) {
+    const errors = [];
+    
+    // Student ID validation
+    if (!data.studentId.trim()) {
+        errors.push({ field: 'student-id', message: 'Student ID is required.' });
+    } else if (!/^\d{4}-\d{3}$/.test(data.studentId.trim())) {
+        errors.push({ field: 'student-id', message: 'Student ID must be in format YYYY-XXX (e.g., 2021-001).' });
+    }
+    
+    // Name validation
+    if (!data.firstName.trim()) {
+        errors.push({ field: 'first-name', message: 'First name is required.' });
+    } else if (data.firstName.trim().length < 2) {
+        errors.push({ field: 'first-name', message: 'First name must be at least 2 characters.' });
+    }
+    
+    if (!data.lastName.trim()) {
+        errors.push({ field: 'last-name', message: 'Last name is required.' });
+    } else if (data.lastName.trim().length < 2) {
+        errors.push({ field: 'last-name', message: 'Last name must be at least 2 characters.' });
+    }
+    
+    // Email validation
+    if (!data.email.trim()) {
+        errors.push({ field: 'signup-email', message: 'Email is required.' });
+    } else if (!data.email.endsWith('@ust-legazpi.edu.ph')) {
+        errors.push({ field: 'signup-email', message: 'Only @ust-legazpi.edu.ph email addresses are allowed.' });
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+        errors.push({ field: 'signup-email', message: 'Please enter a valid email address.' });
+    }
+    
+    // Password validation
+    if (!data.password) {
+        errors.push({ field: 'signup-password', message: 'Password is required.' });
+    } else if (data.password.length < 8) {
+        errors.push({ field: 'signup-password', message: 'Password must be at least 8 characters long.' });
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(data.password)) {
+        errors.push({ field: 'signup-password', message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number.' });
+    }
+    
+    // Confirm password validation
+    if (!data.confirmPassword) {
+        errors.push({ field: 'confirm-password', message: 'Please confirm your password.' });
+    } else if (data.password !== data.confirmPassword) {
+        errors.push({ field: 'confirm-password', message: 'Passwords do not match.' });
+    }
+    
+    // Year level validation
+    if (!data.yearLevel) {
+        errors.push({ field: 'year-level', message: 'Please select your year level.' });
+    }
+    
+    // Course validation
+    if (!data.course.trim()) {
+        errors.push({ field: 'course', message: 'Course/Program is required.' });
+    }
+    
+    // Agreement validation
+    if (!data.agreement) {
+        errors.push({ field: 'agreement', message: 'You must agree to the Terms of Service and Privacy Policy.' });
+    }
+    
+    return errors;
+}
+
+/**
+ * Display sign-up form errors
+ */
+function displaySignUpErrors(errors) {
+    errors.forEach(error => {
+        const errorElement = document.getElementById(`${error.field}-error`);
+        if (errorElement) {
+            errorElement.textContent = error.message;
+        }
+    });
+}
+
+/**
+ * Clear all sign-up form errors
+ */
+function clearSignUpErrors() {
+    const errorFields = ['student-id', 'first-name', 'last-name', 'signup-email', 'signup-password', 'confirm-password', 'year-level', 'course', 'agreement'];
+    errorFields.forEach(field => {
+        const errorElement = document.getElementById(`${field}-error`);
+        if (errorElement) {
+            errorElement.textContent = '';
+        }
+    });
+}
+
+/**
+ * Show sign-up success message
+ */
+function showSignUpSuccess() {
+    const signupForm = document.getElementById('signup-form');
+    signupForm.innerHTML = `
+        <div style="text-align: center; padding: 40px 20px;">
+            <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+            <h3 style="color: #27ae60; margin-bottom: 15px;">Account Created Successfully!</h3>
+            <p style="color: #666; margin-bottom: 20px;">Welcome to UST-Legazpi Mental Health Support Portal.</p>
+            <p style="color: #666; font-size: 14px;">Redirecting to login page...</p>
+        </div>
+    `;
+}
+
+/**
+ * Show sign-up form
+ */
+function showSignUpForm() {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('signup-form').style.display = 'block';
+    clearSignUpErrors();
+}
+
+/**
+ * Show login form
+ */
+function showLoginForm() {
+    document.getElementById('signup-form').style.display = 'none';
+    document.getElementById('login-form').style.display = 'block';
+    clearSignUpErrors();
+}
+
 // ============================================================================
 // STUDENT DASHBOARD FUNCTIONS
 // ============================================================================
@@ -990,6 +1193,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
+    }
+    
+    // Sign-up form submission
+    const signupForm = document.getElementById('signup-form');
+    if (signupForm) {
+        signupForm.addEventListener('submit', handleSignUp);
     }
     
     // Counselor matching form submission

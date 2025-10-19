@@ -1282,6 +1282,55 @@ a:hover {
   margin-top: var(--space-4);
 }
 
+/* Sign-up form specific styles */
+.password-requirements {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  margin-top: var(--space-4);
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin: 0;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.checkbox-group label {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+}
+
+.form-footer {
+  margin-top: var(--space-24);
+  text-align: center;
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-border);
+}
+
+.form-footer p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+}
+
+.link:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
 /* Student View Management */
 .student-view,
 .admin-view {

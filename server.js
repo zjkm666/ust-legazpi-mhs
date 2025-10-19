@@ -174,6 +174,71 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// Registration endpoint
+app.post('/api/register', async (req, res) => {
+    const { student_id, first_name, last_name, email, password, year_level, course } = req.body;
+
+    // Validate required fields
+    if (!student_id || !first_name || !last_name || !email || !password || !year_level || !course) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    // Validate email domain
+    if (!email.endsWith('@ust-legazpi.edu.ph')) {
+        return res.status(400).json({ error: 'Only @ust-legazpi.edu.ph email addresses are allowed' });
+    }
+
+    try {
+        // Check if user already exists
+        db.get(
+            'SELECT id FROM users WHERE email = ? OR student_id = ?',
+            [email, student_id],
+            async (err, existingUser) => {
+                if (err) {
+                    console.error('Database error:', err);
+                    return res.status(500).json({ error: 'Internal server error' });
+                }
+
+                if (existingUser) {
+                    return res.status(409).json({ error: 'User with this email or student ID already exists' });
+                }
+
+                // Hash password
+                const hashedPassword = await bcrypt.hash(password, 10);
+
+                // Insert new user
+                db.run(
+                    'INSERT INTO users (student_id, email, password, first_name, last_name, year_level, course) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                    [student_id, email, hashedPassword, first_name, last_name, year_level, course],
+                    function(err) {
+                        if (err) {
+                            console.error('Error creating user:', err);
+                            return res.status(500).json({ error: 'Failed to create account' });
+                        }
+
+                        res.json({
+                            success: true,
+                            message: 'Account created successfully',
+                            user: {
+                                id: this.lastID,
+                                student_id: student_id,
+                                email: email,
+                                first_name: first_name,
+                                last_name: last_name,
+                                year_level: year_level,
+                                course: course
+                            }
+                        });
+                    }
+                );
+            }
+        );
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Admin login endpoint
 app.post('/api/admin/login', async (req, res) => {
     const { email, password } = req.body;
