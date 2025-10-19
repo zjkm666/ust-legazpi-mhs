@@ -10,7 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // MongoDB connection string - update this with your MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ust-legazpi-mhs';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://zjkm666:Steffijimei4210043@ustl-mhsp.sorgjh8.mongodb.net/';
 
 // Middleware
 app.use(cors());
@@ -505,7 +505,7 @@ app.get('/', (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on mongodb+srv://zjkm666:Steffijimei4210043@ustl-mhsp.sorgjh8.mongodb.net/`);
 });
 
 // Graceful shutdown
